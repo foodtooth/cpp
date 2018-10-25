@@ -1,11 +1,11 @@
 #include "variance/variance.hpp"
 #include <gtest/gtest.h>
-#include <vector>
 
 TEST(VarianceTest, testPieceMode) {
   Variance var1;
   var1.calculate();
-  EXPECT_DOUBLE_EQ(var1.getVariance(), 0);
+  EXPECT_DOUBLE_EQ(var1.getVariance(), 0)
+      << "Variance calculation with default value 0 is wrong";
 
   std::vector<double> vec1, vec2;
   vec1.push_back(1);

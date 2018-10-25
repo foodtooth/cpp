@@ -15,22 +15,25 @@ configure_file(
 # Add project build dir to include path
 include_directories("${PROJECT_BINARY_DIR}")
 
-# Download and unpack gtest at configure time
-configure_file(lib/gtest/CMakeLists.txt.in gtest/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . RESULT_VARIABLE result WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/gtest")
-if (result)
-    message(FATAL_ERROR "CMake step for gtest failed: ${result}")
+include(CTest)
+
+if(BUILD_TESTING)
+    # Download and unpack gtest at configure time
+    configure_file(lib/googletest/CMakeLists.txt.in googletest-download/CMakeLists.txt)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . RESULT_VARIABLE result WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download")
+    if (result)
+        message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+    endif()
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . RESULT_VARIABLE result WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download")
+    if (result)
+        message(FATAL_ERROR "Build step for googletest failed: ${result}")
+    endif()
+    
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    
+    # Add gtest to our build, including gtest, gtest_main, gmock, gmock_main
+    add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googletest-build")
 endif()
-execute_process(COMMAND "${CMAKE_COMMAND}" --build . RESULT_VARIABLE result WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/gtest")
-if (result)
-    message(FATAL_ERROR "Build step for gtest failed: ${result}")
-endif()
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-# Add gtest to our build, including gtest, gtest_main, gmock, gmock_main
-add_subdirectory("${CMAKE_BINARY_DIR}/gtest-src" "${CMAKE_BINARY_DIR}/gtest-build")
-
-enable_testing()
-
+# Add other lib directories here
 add_subdirectory(src/variance)

@@ -6,4 +6,6 @@ target_include_directories(variance
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../../include>
     )
 
-add_subdirectory(test)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
