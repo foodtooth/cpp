@@ -29,14 +29,14 @@ std::vector<T> &operator+=(std::vector<T> &A, const std::vector<T> &B) {
 }
 
 void Variance::setCurData(decltype(cur_data) data) {
-  if (!this->cur_data.empty())
-    this->history += this->cur_data;
-  this->cur_data = data;
-  this->cur_mean = 0;
-  this->cur_var = 0;
-  this->history_mean = this->mean;
-  this->history_var = this->var;
-  this->calculate();
+  if (!cur_data.empty())
+    history += cur_data;
+  cur_data = data;
+  cur_mean = 0;
+  cur_var = 0;
+  history_mean = mean;
+  history_var = var;
+  calculate();
 }
 
 double calMean(std::vector<double> data) {
@@ -52,39 +52,36 @@ double calVar(std::vector<double> data, double mean) {
 }
 
 double Variance::calculate() {
-  if (!this->cur_data.empty()) {
-    this->cur_mean = calMean(this->cur_data);
-    this->cur_var = calVar(this->cur_data, this->cur_mean);
-    if (!this->history.empty()) {
-      this->mean = (this->history.size() * this->history_mean
-          + this->cur_data.size() * this->cur_mean)
-          / (this->history.size() + this->cur_data.size());
-      this->var = (this->history.size()
-          * (this->history_var + pow(this->mean - this->history_mean, 2))
-          + this->cur_data.size()
-              * (this->cur_var + pow(this->mean - this->cur_mean, 2)))
-          / (this->history.size() + this->cur_data.size());
+  if (!cur_data.empty()) {
+    cur_mean = calMean(cur_data);
+    cur_var = calVar(cur_data, cur_mean);
+    if (!history.empty()) {
+      mean = (history.size() * history_mean + cur_data.size() * cur_mean)
+          / (history.size() + cur_data.size());
+      var = (history.size() * (history_var + pow(mean - history_mean, 2))
+          + cur_data.size() * (cur_var + pow(mean - cur_mean, 2)))
+          / (history.size() + cur_data.size());
     } else {
-      this->mean = this->cur_mean;
-      this->var = this->cur_var;
+      mean = cur_mean;
+      var = cur_var;
     }
   }
-  return this->var;
+  return var;
 }
 
 double Variance::getVariance() {
-  return this->var;
+  return var;
 }
 
 void Variance::present() {
-  for (double v : this->cur_data)
+  for (double v : cur_data)
     std::cout << v << " <- cur_data" << std::endl;
-  for (double v : this->history)
+  for (double v : history)
     std::cout << v << " <- history" << std::endl;
-  std::cout << this->mean << " <- mean" << std::endl;
-  std::cout << this->var << " <- var" << std::endl;
-  std::cout << this->history_mean << " <- history_mean" << std::endl;
-  std::cout << this->history_var << " <- history_var" << std::endl;
-  std::cout << this->cur_mean << " <- cur_mean" << std::endl;
-  std::cout << this->cur_var << " <- cur_var" << std::endl;
+  std::cout << mean << " <- mean" << std::endl;
+  std::cout << var << " <- var" << std::endl;
+  std::cout << history_mean << " <- history_mean" << std::endl;
+  std::cout << history_var << " <- history_var" << std::endl;
+  std::cout << cur_mean << " <- cur_mean" << std::endl;
+  std::cout << cur_var << " <- cur_var" << std::endl;
 }
