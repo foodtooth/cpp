@@ -7,5 +7,5 @@ target_include_directories(variance
     )
 
 if(BUILD_TESTING)
-    add_subdirectory(test)
+    add_subdirectory(tests)
 endif()

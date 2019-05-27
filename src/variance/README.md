@@ -1,5 +1,5 @@
 ## Description
-Variance library. Test cases in ./test
+Variance library. Test cases in ./tests
 
 ## Usage
 1. `$ cd TOP_CMAKELIST_DIR`
