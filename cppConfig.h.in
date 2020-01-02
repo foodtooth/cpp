@@ -1,4 +1,4 @@
-#define cpp_VERSION_MAJOR @cpp_VERSION_MAJOR@
-#define cpp_VERSION_MINOR @cpp_VERSION_MINOR@
-#define cpp_VERSION_PATCH @cpp_VERSION_PATCH@
-#define cpp_VERSION_TWEAK @cpp_VERSION_TWEAK@
+#define cpp_VERSION_MAJOR @cpp_VERSION_MAJOR @
+#define cpp_VERSION_MINOR @cpp_VERSION_MINOR @
+#define cpp_VERSION_PATCH @cpp_VERSION_PATCH @
+#define cpp_VERSION_TWEAK @cpp_VERSION_TWEAK @

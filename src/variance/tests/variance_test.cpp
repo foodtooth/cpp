@@ -1,17 +1,14 @@
 #include "variance/variance.hpp"
-#include "gtest/gtest.h"
+
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 class VarianceTest : public ::testing::Test {
  protected:
-  VarianceTest() {
-  }
-  ~VarianceTest() override {
-  }
-  void SetUp() override {
-  }
-  void TearDown() override {
-  }
+  VarianceTest() {}
+  ~VarianceTest() override {}
+  void SetUp() override {}
+  void TearDown() override {}
 
   Variance var1_, var2_;
   std::vector<double> vec1_, vec2_;
@@ -39,5 +36,4 @@ TEST_F(VarianceTest, ZeroInput) {
   EXPECT_DOUBLE_EQ(var1_.getVariance(), var2_.getVariance());
 }
 
-TEST_F(VarianceTest, PieceMode) {
-}
+TEST_F(VarianceTest, PieceMode) {}

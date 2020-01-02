@@ -11,15 +11,14 @@ class Variance {
 
  public:
   Variance()
-      : cur_data( { }),
-        history( { }),
+      : cur_data({}),
+        history({}),
         mean(0),
         var(0),
         history_mean(0),
         history_var(0),
         cur_mean(0),
-        cur_var(0) {
-  }
+        cur_var(0) {}
   Variance(decltype(cur_data) init_data);
   ~Variance();
   double calculate();
