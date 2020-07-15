@@ -1,5 +1,0 @@
-add_executable(thread_pool_test thread_pool_test.cc)
-get_property(ROOT GLOBAL PROPERTY root)
-target_include_directories(thread_pool_test PUBLIC $<BUILD_INTERFACE:${ROOT}/include>)
-target_link_libraries(thread_pool_test gmock_main thread_pool)
-add_test(NAME thread_pool_test COMMAND thread_pool_test)

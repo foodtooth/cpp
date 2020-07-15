@@ -5,14 +5,15 @@
  *      Author: dx
  */
 
-#ifndef INCLUDE_THREAD_POOL_THREAD_POOL_H_
-#define INCLUDE_THREAD_POOL_THREAD_POOL_H_
+#ifndef CPP_THREAD_POOL_THREAD_POOL_H_
+#define CPP_THREAD_POOL_THREAD_POOL_H_
 
 #include <queue>
 #include <thread>
 #include <vector>
 
-namespace tp {
+namespace cpp {
+namespace thread_pool {
 
 class BoundedQueue {};
 
@@ -29,7 +30,7 @@ class ThreadPool {
   std::vector<std::thread> pool_(std::thread::hardware_concurrency());
   BoundedQueue task_queue_;
 };
+}  // namespace thread_pool
+}  // namespace cpp
 
-}  // namespace tp
-
-#endif /* INCLUDE_THREAD_POOL_THREAD_POOL_H_ */
+#endif /* CPP_THREAD_POOL_THREAD_POOL_H_ */
