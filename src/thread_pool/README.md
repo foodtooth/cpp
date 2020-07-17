@@ -4,5 +4,5 @@ Thread pool library.
 
 ## Features
 
-- [ ] Task queue with priority
-- [ ] Dynamic threads number
+- [ ] Multiple task queues with different priorities
+- [ ] Dynamic threads number at runtime

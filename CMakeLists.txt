@@ -16,3 +16,4 @@ endif ()
 
 # Add other lib directories here
 add_subdirectory(src/thread_pool)
+add_subdirectory(src/union_find)
