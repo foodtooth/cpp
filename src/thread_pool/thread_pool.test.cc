@@ -22,7 +22,7 @@ TEST_CASE("vectors can be sized and resized", "[vector]") {
   SECTION("resizing smaller changes size but not capacity") {
     v.resize(0);
 
-    REQUIRE(v.size() == 0);
+    REQUIRE(v.empty());
     REQUIRE(v.capacity() >= 5);
   }
   SECTION("reserving bigger changes capacity but not size") {
