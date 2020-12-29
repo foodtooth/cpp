@@ -2,10 +2,10 @@
 // Created by dx on 7/17/20.
 //
 
+#include "thread_pool/thread_pool.h"
+
 #include <cstdlib>
 #include <iostream>
-
-#include "thread_pool/thread_pool.h"
 
 int main() {
   cpp::thread_pool::ThreadPool tp(4);

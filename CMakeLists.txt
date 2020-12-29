@@ -17,3 +17,5 @@ endif ()
 # Add other lib directories here
 add_subdirectory(src/thread_pool)
 add_subdirectory(src/union_find)
+add_subdirectory(src/sort)
+add_subdirectory(src/dio)
