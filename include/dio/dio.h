@@ -9,14 +9,15 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <string_view>
 #include <unordered_map>
-#include <variant>
 
 namespace cpp::dio {
-inline constexpr int kMaxEvents{20};
-inline constexpr int kBufferSize{256};
-inline constexpr int kMaxPendingConn{10};
-inline constexpr int kDefaultPort{2333};
+inline int constexpr kMaxEvents{20};
+inline int constexpr kBufferSize{256};
+inline int constexpr kMaxPendingConn{10};
+inline int constexpr kDefaultPort{2333};
+inline std::string_view constexpr kMsg{"hello yo "};
 
 // Interface
 class Handler {
@@ -39,17 +40,16 @@ class ServerHandler : public Handler {
 class ClientHandler : public Handler {
  public:
   explicit ClientHandler(int port = kDefaultPort);
-  bool Handle(epoll_event e) override;
-
- private:
-  int sockopt_ret_{-1};
+  bool Handle([[maybe_unused]] epoll_event e) override { return false; }
 };
 class PingPongHandler : public Handler {
  public:
   bool Handle(epoll_event e) override;
-};
 
-using AHandler = std::variant<ServerHandler, ClientHandler, PingPongHandler>;
+ private:
+  int count_{};
+  char buf[kBufferSize];
+};
 
 class IoLoop {
  public:
@@ -66,11 +66,11 @@ class IoLoop {
   }
 
   [[noreturn]] void Start();
-  void AddHandler(int fd, AHandler ah, std::uint32_t events);
+  void AddHandler(int fd, Handler *p, std::uint32_t events);
   // TODO: AddEvents, DelEvents
   // TODO: handlers_ -> socket_infos_
   //  void AddEvents(int fd, std::uint32_t events);
-  void ModEvents(int fd, std::uint32_t events);
+  void ModEvents(int fd, std::uint32_t events) const;
   void DelHandler(int fd);
 
  private:
@@ -78,7 +78,7 @@ class IoLoop {
 
   int epfd_;
   // TODO: atomic lock
-  std::unordered_map<int, AHandler> handlers_{};
+  std::unordered_map<int, Handler *> handlers_{};
 };
 
 class IoLoopException : public std::runtime_error {

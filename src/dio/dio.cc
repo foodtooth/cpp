@@ -32,25 +32,29 @@ IoLoop::IoLoop() {
     int nfds = epoll_wait(epfd_, events.data(), kMaxEvents, -1);
     for (int i{}; i < nfds; ++i) {
       auto e = events[i];
-      std::visit([e](auto &&h) { h.Handle(e); }, handlers_[events[i].data.fd]);
+      handlers_[e.data.fd]->Handle(e);
     }
   }
 }
 
-void IoLoop::AddHandler(int fd, AHandler ah, std::uint32_t events) {
-  handlers_[fd] = std::move(ah);
+void IoLoop::AddHandler(int fd, Handler *p, std::uint32_t events) {
+  handlers_[fd] = p;
   epoll_event e{};
   e.data.fd = fd;
   e.events = events;
+  std::printf("AddHandler. epfd_: %d, fd: %d, e: %d\n", epfd_, fd, events);
   if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &e) < 0) {
     std::printf("Failed to insert handler to epoll\n");
   }
 }
 
-void IoLoop::ModEvents(int fd, std::uint32_t events) {
+void IoLoop::ModEvents(int fd, std::uint32_t events) const {
   epoll_event e{};
+  e.data.fd = fd;
   e.events = events;
-  epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &e);
+  if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &e) < 0) {
+    std::printf("Failed to modify events to epoll\n");
+  }
 }
 
 void IoLoop::DelHandler(int fd) {
@@ -80,6 +84,16 @@ void *GetInAddr(sockaddr *sa) {
     return &(((struct sockaddr_in *)sa)->sin_addr);
   }
   return &(((struct sockaddr_in6 *)sa)->sin6_addr);
+}
+
+bool WriteData(int fd, int counter) {
+  std::string msg{kMsg};
+  msg.append(std::to_string(counter));
+  if (send(fd, msg.data(), msg.size(), 0) == -1) {
+    std::perror("send");
+    return false;
+  }
+  return true;
 }
 }  // namespace
 
@@ -116,7 +130,6 @@ ServerHandler::ServerHandler(int port) {
     throw HandlerInitFailure(msg);
   }
   freeaddrinfo(ai);
-  freeaddrinfo(p);
   if (!SetNonBlocking(fd)) {
     msg = "Failed SetNonBlocking";
     throw HandlerInitFailure(msg);
@@ -125,7 +138,7 @@ ServerHandler::ServerHandler(int port) {
     msg = "Failed to listen on server socket";
     throw HandlerInitFailure(msg);
   }
-  IoLoop::GetInstance().AddHandler(fd, std::move(*this), EPOLLIN | EPOLLET);
+  IoLoop::GetInstance().AddHandler(fd, this, EPOLLIN | EPOLLET);
 }
 
 bool ServerHandler::Handle(epoll_event e) {
@@ -155,23 +168,13 @@ bool ServerHandler::Handle(epoll_event e) {
                         INET6_ADDRSTRLEN),
               client_fd);
 
-  if (!SetNonBlocking(client_fd)) {
-    std::printf("SetNonBlocking failed\n");
-    return false;
-  }
+  //  if (!SetNonBlocking(client_fd)) {
+  //    std::printf("SetNonBlocking failed\n");
+  //    return false;
+  //  }
 
-  //  Handler *clientHandler = new PingPongHandler();
-  //  IOLoop::Instance()->addHandler(client, clientHandler, EPOLLIN | EPOLLOUT);
-  return false;
-}
-
-bool WriteData(int fd, int counter) {
-  std::string msg{"hello yo "};
-  msg.append(std::to_string(counter));
-  if (send(fd, msg.data(), msg.size(), 0) == -1) {
-    perror("send");
-    return false;
-  }
+  Handler *ptr = new PingPongHandler();
+  IoLoop::GetInstance().AddHandler(client_fd, ptr, EPOLLIN);
   return true;
 }
 
@@ -187,48 +190,65 @@ ClientHandler::ClientHandler(int port) {
     throw HandlerInitFailure(msg);
   }
 
-  char s[INET6_ADDRSTRLEN];
   int fd{};
   // loop through all the results and connect to the first we can
-  //  for (p = server_info; p != nullptr;) {
-  //    fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-  //    if (fd < 0) {
-  //      continue;
-  //    }
-  //    SetNonBlocking(fd);
-  //    int status = connect(fd, p->ai_addr, p->ai_addrlen);
-  //    if (status == 0) {
-  //      // OK, socket is ready for IO
-  //    } else if (errno == EINPROGRESS) {
-  //      IoLoop::GetInstance().AddHandler(fd, std::move(*this), EPOLLOUT);
-  //      while (sockopt_ret_ == -1) {
-  //        std::this_thread::yield();
-  //      }
-  //      if (sockopt_ret_ != 0) {
-  //        // connection did no go through
-  //        IoLoop::GetInstance().DelHandler(fd);
-  //        close(fd);
-  //      }
-  //      break;
-  //    } else {
-  //      p = p->ai_next;
-  //    }
-  //  }
-}
-
-bool ClientHandler::Handle(epoll_event e) {
-  int fd = e.data.fd;
-  socklen_t ret_len = sizeof(sockopt_ret_);
-  if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &sockopt_ret_, &ret_len) < 0) {
-    std::printf("client getsockopt failed: %s\n", std::strerror(errno));
-    IoLoop::GetInstance().DelHandler(fd);
-    close(fd);
-    sockopt_ret_ = -1;
-    return false;
+  for (p = server_info; p != nullptr; p = p->ai_next) {
+    fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+    if (fd < 0) {
+      std::perror("Client: socket");
+      continue;
+    }
+    // SetNonBlocking(fd);
+    if (connect(fd, p->ai_addr, p->ai_addrlen) < 0) {
+      close(fd);
+      std::perror("Client: connect");
+      continue;
+    }
+    break;
+  }
+  if (p == nullptr) {
+    msg = "Client: failed to connect";
+    throw HandlerInitFailure(msg);
   }
 
-  return true;
+  char remote_ip[INET6_ADDRSTRLEN];
+  std::printf("connecting to %s\n",
+              inet_ntop(p->ai_family, GetInAddr((struct sockaddr *)p->ai_addr),
+                        remote_ip, INET6_ADDRSTRLEN));
+  freeaddrinfo(server_info);
+  //  SetNonBlocking(fd);
+
+  Handler *ptr = new PingPongHandler();
+  IoLoop::GetInstance().AddHandler(fd, ptr, EPOLLOUT);
 }
 
-bool PingPongHandler::Handle(epoll_event e) { return false; }
+bool PingPongHandler::Handle(epoll_event e) {
+  int fd{e.data.fd};
+  if ((e.events & EPOLLERR) || (e.events & EPOLLHUP)) {
+    IoLoop::GetInstance().DelHandler(fd);
+    return false;
+  }
+  if (e.events & EPOLLOUT) {
+    WriteData(fd, count_ + 1);
+    IoLoop::GetInstance().ModEvents(fd, EPOLLIN);
+  }
+  if (e.events & EPOLLIN) {
+    int len = recv(fd, buf, kBufferSize, 0);
+    if (len < 0) {
+      std::printf("recv returned unrecoverable error %d\n", errno);
+    } else {
+      buf[len] = 0;
+      std::string num(std::begin(buf) + kMsg.size());
+      count_ = std::stoi(num);
+    }
+    if (len > 0) {
+      std::printf("recv %s\n", buf);
+      IoLoop::GetInstance().ModEvents(fd, EPOLLOUT);
+    } else {
+      IoLoop::GetInstance().DelHandler(fd);
+    }
+  }
+
+  return false;
+}
 }  // namespace cpp::dio

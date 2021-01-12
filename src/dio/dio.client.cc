@@ -7,7 +7,8 @@
 #include <cstdlib>
 
 int main() {
-  cpp::dio::IoLoop::GetInstance();
+  cpp::dio::ClientHandler ch{};
+  cpp::dio::IoLoop::GetInstance().Start();
 
   return EXIT_SUCCESS;
 }
