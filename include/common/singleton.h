@@ -21,6 +21,13 @@ class Singleton {
   Singleton() = default;
 };
 
+// This will lead to segfault in process termination when so other singleton
+// try to access instance method all the time. Use static shared_ptr,
+// carefully define init order for shared_ptr and actual instance. Use
+// weak_ptr to access shared_ptr to ensure that instance will always be valid
+// as long as weak_ptr can successfully lock shared_ptr. (destructor is
+// reverse order of object initialization. Make shared_ptr live longer than
+// the instance)
 template <typename T>
 T& Singleton<T>::instance() {
   static T instance{Token{}};
